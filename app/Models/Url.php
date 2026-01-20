@@ -4,13 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use Illuminate\Support\Str;
+
 class Url extends Model
 {
     protected $fillable = [
-        'original_url',
-        'short_code',
+        'long_url',
+        'url_id',
+        'uid',
         'description',
-        'clicks',
+        'click_count',
         'is_enabled',
         'expires_at',
     ];
@@ -18,14 +21,24 @@ class Url extends Model
     protected $casts = [
         'is_enabled' => 'boolean',
         'expires_at' => 'datetime',
+        'click_count' => 'integer',
     ];
 
-    public static function generateUniqueShortCode(): string
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($url) {
+            $url->uid = (string) Str::ulid();
+        });
+    }
+
+    public static function generateUniqueUrlId(): string
     {
         do {
-            $code = bin2hex(random_bytes(3)); // 6 characters
-        } while (self::where('short_code', $code)->exists());
+            $id = Str::random(6);
+        } while (self::where('url_id', $id)->exists());
 
-        return $code;
+        return $id;
     }
 }
